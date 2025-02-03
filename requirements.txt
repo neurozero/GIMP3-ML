@@ -15,3 +15,5 @@ opencv-python
 pretrainedmodels
 scikit-image
 timm
+pooch
+jsonschema

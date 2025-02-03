@@ -11,7 +11,7 @@ Y88b  d88P   888   888   "   888 888             888   "   888 888
  "Y8888P88 8888888 888       888 888             888       888 88888888
 
 
-Performs inpainting on a given image with another mask layer.
+Performs background removal on a given layer.
 """
 import gi
 gi.require_version("Gimp", "3.0")
@@ -26,7 +26,23 @@ from constants import *
 
 _ = gettext.gettext
 
-model_dict = {MODEL1: "u2net", MODEL2: "u2net_human_seg", MODEL3: "u2netp"}
+model_dict = {
+    MODEL1: "u2net",
+    MODEL2: "u2netp",
+    MODEL3: "u2net_human_seg",
+    MODEL4: "u2net_cloth_seg",
+    MODEL5: "silueta", 
+    MODEL6: "isnet_general_use",
+    MODEL7: "isnet_anime",
+    MODEL8: "sam",
+    MODEL9: "birefnet_general",
+    MODEL10: "birefnet_general_lite",
+    MODEL11: "birefnet_portrait",
+    MODEL12: "birefnet_dis",
+    MODEL13: "birefnet_hrsod",
+    MODEL14: "birefnet_cod",
+    MODEL15: "birefnet_massive",
+    }
 model_name_enum = StringEnum(
     MODEL1,
     _(MODEL1),
@@ -34,9 +50,33 @@ model_name_enum = StringEnum(
     _(MODEL2),
     MODEL3,
     _(MODEL3),
+    MODEL4,
+    _(MODEL4),
+    MODEL5,
+    _(MODEL5),
+    MODEL6,
+    _(MODEL6),
+    MODEL7,
+    _(MODEL7),
+    MODEL8,
+    _(MODEL8),
+    MODEL9,
+    _(MODEL9),
+    MODEL10,
+    _(MODEL10),
+    MODEL11,
+    _(MODEL11),
+    MODEL12,
+    _(MODEL12),
+    MODEL13,
+    _(MODEL13),
+    MODEL14,
+    _(MODEL14),
+    MODEL15,
+    _(MODEL15),
 )
 
-def inpainting(
+def removebackground(
     procedure,
     image,
     n_drawables,
@@ -48,6 +88,7 @@ def inpainting(
     alpha_matting_background_threshold,
     alpha_matting_erode_size,
     only_mask,
+    post_process_mask,
     progress_bar,
     config_path_output,
 ):
@@ -60,16 +101,16 @@ def inpainting(
     init_tmp()
 
     save_image(os.path.join(tmp_path, BASE_IMG), image, layers[0])
-
     set_model_config({
             "force_cpu": bool(force_cpu),
             "n_drawables": n_drawables,
             "model_name": model_dict[model_name],
-            "alpha_matting":  int(alpha_matting), # 240 | 0..255
+            "alpha_matting":  bool(alpha_matting), # on | on/off
             "alpha_matting_foreground_threshold":  int(alpha_matting_foreground_threshold), # 240 | 0..255
             "alpha_matting_background_threshold":  int(alpha_matting_background_threshold), # 10 | 0..255
             "alpha_matting_erode_size":  int(alpha_matting_erode_size), # 10| 0..255
-            "only_mask":  bool(only_mask), # 0..255
+            "only_mask":  bool(only_mask), # off | on/off
+            "post_process_mask": bool(post_process_mask), # off | on/off
             "inference_status": "started",
         }, PLUGIN_ID)
 
@@ -88,7 +129,7 @@ def inpainting(
         elog = "See GIMP console for error text"
         if "last_error" in data_output: elog = data_output["last_error"]
         show_dialog(
-            "Interpolation was not performed due to errors.\nError text:\n" + elog,
+            "Background removal was not performed due to errors.\nError text:\n" + elog,
             "Error!", "error", image_paths
         )
         cleanup_tmp() # Remove temporary images
@@ -103,6 +144,7 @@ def run(procedure, run_mode, image, n_drawables, layer, args, data):
     alpha_matting_background_threshold = args.index(4)
     alpha_matting_erode_size = args.index(5)
     only_mask = args.index(6)
+    post_process_mask = args.index(7)
 
     if run_mode == Gimp.RunMode.INTERACTIVE:
         # Get all paths
@@ -175,11 +217,20 @@ def run(procedure, run_mode, image, n_drawables, layer, args, data):
         label.show()
             
         # Scale parameter
-        label = Gtk.Label.new_with_mnemonic(_("_AM:"))
-        grid.attach(label, 0, 1, 1, 1)
-        label.show()
-        spin = GimpUi.prop_spin_button_new(
-            config, "alpha_matting", step_increment=1, page_increment=10, digits=3
+        # label = Gtk.Label.new_with_mnemonic(_("_AM:"))
+        # grid.attach(label, 0, 1, 1, 1)
+        # label.show()
+        # spin = GimpUi.prop_spin_button_new(
+        #     config, "alpha_matting", step_increment=1, page_increment=10, digits=3
+        # )
+        # grid.attach(spin, 1, 1, 1, 1)
+        # spin.show()
+        
+        spin = GimpUi.prop_check_button_new(config, "alpha_matting", _("_Alpha Matting"))
+        spin.set_tooltip_text(
+            _(
+                "If checked, Alpha Matting is turned on."
+            )
         )
         grid.attach(spin, 1, 1, 1, 1)
         spin.show()
@@ -223,6 +274,16 @@ def run(procedure, run_mode, image, n_drawables, layer, args, data):
         )
         grid.attach(spin, 3, 0, 1, 1)
         spin.show()
+
+        # post_process_mask
+        spin = GimpUi.prop_check_button_new(config, "post_process_mask", _("_Postprocess Mask"))
+        spin.set_tooltip_text(
+            _(
+                "If checked, the mask will be post-processed."
+            )
+        )
+        grid.attach(spin, 1, 2, 1, 1)
+        spin.show()
         
         # Force CPU parameter
         spin = GimpUi.prop_check_button_new(config, "force_cpu", _("Force _CPU"))
@@ -256,7 +317,14 @@ def run(procedure, run_mode, image, n_drawables, layer, args, data):
             if response == Gtk.ResponseType.OK:
                 force_cpu = config.get_property("force_cpu")
                 model_name = config.get_property("model_name")
-                result = inpainting(
+                alpha_matting = config.get_property("alpha_matting")
+                alpha_matting_foreground_threshold = config.get_property("alpha_matting_foreground_threshold")
+                alpha_matting_background_threshold = config.get_property("alpha_matting_background_threshold")
+                alpha_matting_erode_size = config.get_property("alpha_matting_erode_size")
+                only_mask = config.get_property("only_mask")
+                post_process_mask = config.get_property("post_process_mask")
+                print(f"Starting Remove: CPU={force_cpu}, Model={model_name}, Alpha Matting={alpha_matting}, FG={alpha_matting_foreground_threshold}, BG={alpha_matting_background_threshold}, Erode={alpha_matting_erode_size}, Only Mask={only_mask}, PP Mask={post_process_mask}")
+                result = removebackground(
                     procedure,
                     image,
                     n_drawables,
@@ -268,6 +336,7 @@ def run(procedure, run_mode, image, n_drawables, layer, args, data):
                     alpha_matting_background_threshold,
                     alpha_matting_erode_size,
                     only_mask,
+                    post_process_mask,
                     progress_bar,
                     config_path_output,
                 )
@@ -289,16 +358,17 @@ def run(procedure, run_mode, image, n_drawables, layer, args, data):
 class RemoveBG(Gimp.PlugIn):
     ## Parameters ##
     __gproperties__ = {
-        "alpha_matting": (int, _("_AM"), "Alpha matting; 0..255 (Default: 240)", 0, 255, 240, GObject.ParamFlags.READWRITE),
+        "alpha_matting": (bool, _("_AM"), "Alpha matting; on/off (Default: on)", True, GObject.ParamFlags.READWRITE),
         "alpha_matting_foreground_threshold": (int, _("AM _FT"), "Alpha matting foreground threshold; 0..255 (Default: 240)", 0, 255, 240, GObject.ParamFlags.READWRITE),
         "alpha_matting_background_threshold": (int, _("AM _BT"), "Alpha matting background threshold; 0..255 (Default: 10)", 0, 255, 10, GObject.ParamFlags.READWRITE),
         "alpha_matting_erode_size": (int, _("AM _ES"), "Alpha matting erode size; 0..255 (Default: 10)", 0, 255, 10, GObject.ParamFlags.READWRITE),
         "only_mask": (bool, _("Only _Mask"), "Only mask; (Default: False)", False, GObject.ParamFlags.READWRITE),
+        "post_process_mask": (bool, _("_Postprocess Mask"), "Postprocess mask; (Default: False)", False, GObject.ParamFlags.READWRITE),
         "force_cpu": (bool, _("Force _CPU"), "Force CPU; (Default: True)", True, GObject.ParamFlags.READWRITE),
         "model_name": (
             str,
             _("Model Name"),
-            f"Model Name: '{MODEL1}', '{MODEL2}', '{MODEL3}'",
+            f"Model Name: '{MODEL1}', '{MODEL2}', '{MODEL3}', '{MODEL4}', '{MODEL5}', '{MODEL6}', '{MODEL7}', '{MODEL8}', '{MODEL9}', '{MODEL10}', '{MODEL11}', '{MODEL12}', '{MODEL13}', '{MODEL14}', '{MODEL15}'",
             MODEL1,
             GObject.ParamFlags.READWRITE
         ),
@@ -335,6 +405,7 @@ class RemoveBG(Gimp.PlugIn):
             procedure.add_argument_from_property(self, "alpha_matting_background_threshold")
             procedure.add_argument_from_property(self, "alpha_matting_erode_size")
             procedure.add_argument_from_property(self, "only_mask")
+            procedure.add_argument_from_property(self, "post_process_mask")
         return procedure
 
 
