@@ -3,7 +3,7 @@
 Machine Learning plugins for GIMP 3. These include: Background Removal, Super Resolution, Monocular Depth Map (as opposed to stereo), Inpainting (object removal), among others.
 
 # ABOUT THIS FORK
-This was forked [UserUnknownFactor GIMP3-ML](from https://github.com/UserUnknownFactor/GIMP3-ML) which was forked from [original version](https://github.com/kritiksoman/GIMP-ML/tree/GIMP3-ML)
+This was forked from [UserUnknownFactor GIMP3-ML](https://github.com/UserUnknownFactor/GIMP3-ML) which was forked from [original version](https://github.com/kritiksoman/GIMP-ML/tree/GIMP3-ML)
 
 Both of those forks seem abandoned. The original GIMP-ML is being moved in a different direction to use DALL-E, Stable Diffusion, etc. But doesn't seem to include these specific Machine Learning tools for specific tasks which I find very useful.
 
