@@ -1,7 +1,16 @@
 # GIMP3-ML
 
-Machine Learning plugins for GIMP 3.
+Machine Learning plugins for GIMP 3. These include: Background Removal, Super Resolution, Monocular Depth Map (as opposed to stereo), Inpainting (object removal), among others.
 
+# ABOUT THIS FORK
+This was forked [UserUnknownFactor GIMP3-ML](from https://github.com/UserUnknownFactor/GIMP3-ML) which was forked from [original version](https://github.com/kritiksoman/GIMP-ML/tree/GIMP3-ML)
+
+Both of those forks seem abandoned. The original GIMP-ML is being moved in a different direction to use DALL-E, Stable Diffusion, etc. But doesn't seem to include these specific Machine Learning tools for specific tasks which I find very useful.
+
+I've made this fork to update the plug-ins to work with the latest GIMP version. When it was last worked on in the old Fork it was supposedly working with a 2.99.x version of GIMP. First I will make sure it is working with GIMP 2.99.12, then move to the latest GIMP 3 RC (Release Canditate)
+
+
+# INFO FROM PREVIOUS FORKS
 Forked from the [original version](https://github.com/kritiksoman/GIMP-ML/tree/GIMP3-ML) to improve the user experience in several aspects:
 * Added more models.
 * Models are run with Python 3.10+.
