@@ -111,13 +111,13 @@ def run(procedure, run_mode, image, n_drawables, layer, args, data):
         )
         config_path_output = get_config()
         python_path = config_path_output["python_path"]
-        config_path_output["plugin_path"] = os.path.join(config_path, PLUGIN_ID, "rembg.py")
+        config_path_output["plugin_path"] = os.path.join(config_path, PLUGIN_ID, "rembgwrapper.py")
 
         config = procedure.create_config()
         config.set_property("force_cpu", force_cpu)
         config.begin_run(image, run_mode, args)
 
-        GimpUi.init("rembg.py")
+        GimpUi.init("rembgwrapper.py")
         use_header_bar = Gtk.Settings.get_default().get_property(
             "gtk-dialogs-use-header"
         )
