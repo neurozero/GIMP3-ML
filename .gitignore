@@ -12,3 +12,4 @@ gimpml.egg-info/
 *.json
 error_log.txt
 gimpml/weights/
+gimpenv3/
