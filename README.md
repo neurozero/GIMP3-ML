@@ -1,13 +1,15 @@
 # GIMP3-ML
 
-Machine Learning plugins for GIMP 3. These include: Background Removal, Super Resolution, Monocular Depth Map (as opposed to stereo), Inpainting (object removal), among others.
+Machine Learning plugins for GIMP 3. These include: Background Removal, Super Resolution, Monocular Depth Map (as opposed to stereo), Inpainting, Noise Removal, Deblur, Denoise, among others. See below for the full list.
+
+These plugins wrap functionality from other projects in order to make them easily accessible from within GIMP. See below for links to specific projects.
 
 # ABOUT THIS FORK
 This was forked from [UserUnknownFactor GIMP3-ML](https://github.com/UserUnknownFactor/GIMP3-ML) which was forked from [original version](https://github.com/kritiksoman/GIMP-ML/tree/GIMP3-ML)
 
-Both of those forks seem abandoned. The original GIMP-ML is being moved in a different direction to use DALL-E, Stable Diffusion, etc. But doesn't seem to include these specific Machine Learning tools for specific tasks which I find very useful.
+Both of those forks seem abandoned. The original GIMP-ML is being moved in a different direction to use DALL-E, Stable Diffusion, etc. But doesn't seem to include these specific Machine Learning tools for specific tasks which I find very useful. In the last fork the Remove Background plug-in isn't working, as it hasn't kept up with the latest version of rembg, among other issues.
 
-I've made this fork to update the plug-ins to work with the latest GIMP version. When it was last worked on in the old Fork it was supposedly working with a 2.99.x version of GIMP. First I will make sure it is working with GIMP 2.99.12, then move to the latest GIMP 3 RC (Release Canditate)
+I've made this fork to update the plug-ins to work with the latest GIMP version. When it was last worked on in the old Fork it was supposedly working with a 2.99.12 version of GIMP. First I will make sure it is working with GIMP 2.99.12, then move to the latest GIMP 3 RC (Release Canditate).
 
 
 # INFO FROM PREVIOUS FORKS
